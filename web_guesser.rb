@@ -2,41 +2,67 @@ require 'sinatra'
 require 'sinatra/reloader'
 
 SECRET_NUMBER = 1 + rand(99)
+guesses_left = 10
+correct = false
 
 get '/' do
-    guess = params["guess"]
-    message = check_guess(guess)
-    bg_color = css_color message
-    erb :index, :locals => {:bg_color => bg_color, :message => message}
-end
-
-def check_guess(guess)
-	if guess.nil?
-		return "Pick a number 1-100"
-	else
-		if guess.to_i > SECRET_NUMBER + 5 
-	  		return "Whoa! Way Too High"
-	    elsif guess.to_i < SECRET_NUMBER - 5 
-	  		return "Yikes! Way Too Low"
-	 	elsif guess.to_i > SECRET_NUMBER 
-	  		return "That a bit too High" 
-	  	elsif guess.to_i < SECRET_NUMBER 
-	  		return "Too Low"
-	    elsif  guess.to_i == SECRET_NUMBER 
-	    	correct = true
-	  		return "CONGRATS! You have guessed correctly!"
-	  	end 
-	end
-end
-
-def css_color(message)
-	case message
-		when "Pick a number 1-100" then "#FFFFFF"
-		when "Whoa! Way Too High" then "#FF9473" 
-		when "Yikes! Way Too Low"  then "#FF9473"
-		when "That a bit too High" then "#FF9473"
-		when "Too Low" then "#FF9473"
-		when "Sorry, You lose this round!" then "red"
-		when "CONGRATS! You have guessed correctly!" then "#62D99C"
-	end
-end
+    player_guess = params["guess"].to_i
+    response = check_guess(player_guess)
+    @@guesses_remaining -= 1
+    evaluate_guesses(player_guess)
+    
+    
+        erb :index, :locals => {:answer               => @@random_number,
+                                :player_guess         => params["guess"],
+                                :response             => response,
+                                :color_response       => @color_response,
+                                :guesses_remaining    => @@guesses_remaining,
+                                :message              => @message}
+  end
+  
+  @@random_number = rand(100) + 1
+  @@guesses_remaining = 10
+  
+  def evaluate_guesses(player_guess)
+    if player_guess == @@random_number
+      reset_game
+      @message = "You won!! -- A new number has been generated and your guesses remaining reset."
+    end
+    
+    if @@guesses_remaining == 0
+      reset_game
+      @message = "You lost!! -- A new number has been generated and your guesses remaining reset."
+    end
+  end
+  
+  def reset_game
+    @@guesses_remaining = 9
+    @@random_number = rand(100) + 1
+  end
+  
+  
+  
+  def check_guess(player_guess)
+    if player_guess == "".to_i
+      ""
+    elsif player_guess == @@random_number
+      @color_response = "response__paragraph--correct"
+      "The secret number was #{@@random_number}"
+    elsif player_guess < @@random_number
+      if player_guess < @@random_number - 5
+        @color_response = "response__paragraph--far"
+        "Much too low"
+      else
+        @color_response = "response__paragraph--near"
+        "Too low"
+      end
+    elsif player_guess > @@random_number
+      if player_guess > @@random_number + 5
+        @color_response = "response__paragraph--far"
+        "Much too high"
+      else
+        @color_response = "response__paragraph--near"
+        "Too high"
+      end
+    end
+  end
