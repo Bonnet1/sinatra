@@ -6,7 +6,8 @@ SECRET_NUMBER = 1 + rand(99)
 get '/' do
     guess = params["guess"]
     message = check_guess(guess)
-    erb :index, :locals => {:message => message}
+    bg_color = css_color message
+    erb :index, :locals => {:bg_color => bg_color, :message => message}
 end
 
 def check_guess(guess)
@@ -25,5 +26,17 @@ def check_guess(guess)
 	    	correct = true
 	  		return "CONGRATS! You have guessed correctly!"
 	  	end 
+	end
+end
+
+def css_color(message)
+	case message
+		when "Pick a number 1-100" then "#FFFFFF"
+		when "Whoa! Way Too High" then "#FF9473" 
+		when "Yikes! Way Too Low"  then "#FF9473"
+		when "That a bit too High" then "#FF9473"
+		when "Too Low" then "#FF9473"
+		when "Sorry, You lose this round!" then "red"
+		when "CONGRATS! You have guessed correctly!" then "#62D99C"
 	end
 end
